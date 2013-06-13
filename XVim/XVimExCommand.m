@@ -822,22 +822,29 @@
     }
     
     // switch on command name
-    bool cmdUnhandled = true;
+    bool cmdValid = false;
+    bool cmdHandled = false;
     for( XVimExCmdname* cmdname in _excommands ){
         if( [cmdname.cmdName hasPrefix:[exarg cmd]] ){
             SEL method = NSSelectorFromString(cmdname.methodName);
+            cmdValid = true;
             if( [self respondsToSelector:method] ){
-                cmdUnhandled = false;
+                cmdHandled = true;
                 [self performSelector:method withObject:exarg withObject:window];
-                break;
             }
+            break;
         }
     }
     
-    if( cmdUnhandled )
-    {
+    if( !cmdHandled ){
+        NSString *errorMessage;
+        if( cmdValid ){
+            errorMessage = @"Sorry, this command isn't implemented: ";
+        }else{
+            errorMessage = @"Not an editor command: ";
+        }
         // report unhandled command (removing the leading ':')
-        [window errorMessage:[NSString stringWithFormat: @"Not an editor command: %@", [cmd substringFromIndex:1]] ringBell:TRUE];
+        [window errorMessage:[NSString stringWithFormat: @"%@%@", errorMessage, [cmd substringFromIndex:1]] ringBell:TRUE];
     }
     
     return;
