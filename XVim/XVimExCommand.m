@@ -822,14 +822,22 @@
     }
     
     // switch on command name
+    bool cmdUnhandled = true;
     for( XVimExCmdname* cmdname in _excommands ){
         if( [cmdname.cmdName hasPrefix:[exarg cmd]] ){
             SEL method = NSSelectorFromString(cmdname.methodName);
             if( [self respondsToSelector:method] ){
+                cmdUnhandled = false;
                 [self performSelector:method withObject:exarg withObject:window];
                 break;
             }
         }
+    }
+    
+    if( cmdUnhandled )
+    {
+        // report unhandled command (removing the leading ':')
+        [window errorMessage:[NSString stringWithFormat: @"Not an editor command: %@", [cmd substringFromIndex:1]] ringBell:TRUE];
     }
     
     return;
